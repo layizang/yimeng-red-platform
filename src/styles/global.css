@@ -1,0 +1,59 @@
+:root {
+  /* 覆盖 Element Plus 主色为红色主题 */
+  --el-color-primary: #c0392b;
+  --el-color-primary-light-3: #d15a4c;
+  --el-color-primary-light-5: #e08a80;
+  --el-color-primary-light-7: #edbbb5;
+  --el-color-primary-light-8: #f2d2cd;
+  --el-color-primary-light-9: #f9e9e7;
+  --el-color-primary-dark-2: #9a2e22;
+
+  /* 品牌色 */
+  --brand-red: #8b0000;
+  --brand-red-light: #c0392b;
+  --brand-gold: #c8a15a;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: "Microsoft YaHei", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+  color: #333;
+  background-color: #f7f5f3;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+.page-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 20px 40px;
+}
+
+.page-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--brand-red);
+  border-left: 5px solid var(--brand-red);
+  padding-left: 12px;
+  margin: 0 0 8px;
+}
+
+.page-subtitle {
+  color: #888;
+  margin: 0 0 24px;
+  padding-left: 17px;
+}
