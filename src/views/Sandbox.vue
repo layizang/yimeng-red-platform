@@ -1,7 +1,7 @@
 <template>
   <div class="page-container">
-    <h1 class="page-title">战役动态沙盘推演</h1>
-    <p class="page-subtitle">地图与时间轴联动，分阶段还原孟良崮战役态势（Demo 用模拟底图，正式版接入高德地图）</p>
+    <h1 class="page-title">战役进程</h1>
+    <p class="page-subtitle">地图与时间轴联动，分阶段还原孟良崮战役态势（底图为示意图占位，正式版可接入高德地图）</p>
 
     <!-- 阶段切换 -->
     <div class="stage-tabs">
@@ -127,7 +127,7 @@
       <el-col :xs="24" :md="7">
         <div class="panel">
           <div class="panel-title">阶段说明</div>
-          <p class="stage-desc">{{ currentStageData.summary }}</p>
+          <p class="stage-desc">{{ currentStageData?.summary }}</p>
 
           <div class="panel-title">兵力对比</div>
           <div class="force-row">
@@ -143,7 +143,7 @@
           </div>
 
           <div class="panel-title">当前事件</div>
-          <div class="current-event" @click="showEvent(currentEvent)">
+          <div v-if="currentEvent" class="current-event" @click="showEvent(currentEvent)">
             <div class="ce-name">{{ currentEvent.name }}</div>
             <div class="ce-time">{{ currentEvent.time }}</div>
             <div class="ce-desc">{{ currentEvent.desc }}</div>
@@ -203,9 +203,12 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, ref, watch } from 'vue'
-import { stages, events, units } from '../data/mock'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { getStages, getEvents, getUnits } from '../api/battle'
 
+const stages = ref([])
+const events = ref([])
+const units = ref([])
 const activeIdx = ref(0)
 const playing = ref(false)
 const zoom = ref(1)
@@ -269,16 +272,16 @@ const phaseData = {
   }
 }
 
-const currentStage = computed(() => events[activeIdx.value]?.stageId || 1)
-const currentStageData = computed(() => stages.find((s) => s.id === currentStage.value) || stages[0])
-const currentStageName = computed(() => currentStageData.value.name)
+const currentStage = computed(() => events.value[activeIdx.value]?.stageId || 1)
+const currentStageData = computed(() => stages.value.find((s) => s.id === currentStage.value) || stages.value[0])
+const currentStageName = computed(() => currentStageData.value?.name || '')
 const phase = computed(() => phaseData[currentStage.value])
 
-const stageEvents = computed(() => events.filter((e) => e.stageId === currentStage.value))
-const stageStartIdx = computed(() => events.findIndex((e) => e.stageId === currentStage.value))
+const stageEvents = computed(() => events.value.filter((e) => e.stageId === currentStage.value))
+const stageStartIdx = computed(() => events.value.findIndex((e) => e.stageId === currentStage.value))
 const stageActiveIdx = computed(() => activeIdx.value - stageStartIdx.value)
 const stageLitIds = computed(() => new Set(stageEvents.value.slice(0, stageActiveIdx.value + 1).map((e) => e.id)))
-const currentEvent = computed(() => events[activeIdx.value])
+const currentEvent = computed(() => events.value[activeIdx.value])
 const activeEventId = computed(() => currentEvent.value?.id || null)
 
 const eventVisible = computed({
@@ -291,15 +294,15 @@ const unitVisible = computed({
 })
 
 function stageName(id) {
-  return stages.find((s) => s.id === id)?.name || ''
+  return stages.value.find((s) => s.id === id)?.name || ''
 }
 
 function jumpTo(i) {
-  activeIdx.value = Math.max(0, Math.min(events.length - 1, i))
+  activeIdx.value = Math.max(0, Math.min(events.value.length - 1, i))
 }
 
 function selectStage(id) {
-  const idx = events.findIndex((e) => e.stageId === id)
+  const idx = events.value.findIndex((e) => e.stageId === id)
   if (idx >= 0) {
     stop()
     jumpTo(idx)
@@ -311,7 +314,7 @@ function showEvent(e) {
 }
 
 function showUnit(short) {
-  detailUnit.value = units.find((u) => u.short === short) || null
+  detailUnit.value = units.value.find((u) => u.short === short) || null
 }
 
 function togglePlay() {
@@ -321,7 +324,7 @@ function togglePlay() {
 function start() {
   playing.value = true
   timer = setInterval(() => {
-    if (activeIdx.value < events.length - 1) {
+    if (activeIdx.value < events.value.length - 1) {
       activeIdx.value += 1
     } else {
       stop()
@@ -344,6 +347,13 @@ function reset() {
 watch(activeIdx, () => {
   const el = trackRef.value?.children[activeIdx.value]
   el?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' })
+})
+
+onMounted(async () => {
+  const [s, e, u] = await Promise.all([getStages(), getEvents(), getUnits()])
+  stages.value = s || []
+  events.value = e || []
+  units.value = u || []
 })
 
 onBeforeUnmount(stop)

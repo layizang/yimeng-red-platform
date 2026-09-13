@@ -12,6 +12,10 @@
   --brand-red: #8b0000;
   --brand-red-light: #c0392b;
   --brand-gold: #c8a15a;
+  --brand-gold-light: #e0c088;
+  --ink: #2b2b2b;
+  --muted: #888;
+  --line: #eee;
 }
 
 * {
@@ -29,7 +33,8 @@ body,
 body {
   font-family: "Microsoft YaHei", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
   color: #333;
-  background-color: #f7f5f3;
+  background-color: #f5f3f0;
+  -webkit-font-smoothing: antialiased;
 }
 
 a {
@@ -37,23 +42,121 @@ a {
   color: inherit;
 }
 
+/* 内容容器（正式官网宽度） */
 .page-container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 24px 20px 40px;
+  padding: 32px 20px 48px;
 }
 
 .page-title {
-  font-size: 24px;
+  font-size: 26px;
   font-weight: 700;
   color: var(--brand-red);
   border-left: 5px solid var(--brand-red);
-  padding-left: 12px;
-  margin: 0 0 8px;
+  padding-left: 14px;
+  margin: 0 0 10px;
 }
 
 .page-subtitle {
-  color: #888;
-  margin: 0 0 24px;
-  padding-left: 17px;
+  color: var(--muted);
+  margin: 0 0 28px;
+  padding-left: 19px;
+  font-size: 14px;
+}
+
+.section-title {
+  position: relative;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--brand-red);
+  margin: 8px 0 20px;
+  padding-left: 14px;
+  line-height: 1.4;
+}
+
+.section-title::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 4px;
+  bottom: 4px;
+  width: 4px;
+  background: linear-gradient(180deg, var(--brand-red), var(--brand-gold));
+  border-radius: 2px;
+}
+
+/* ============ 占位图（换真图时替换对应 img 即可） ============ */
+.ph {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(120% 120% at 20% 15%, rgba(224, 192, 136, 0.55) 0%, rgba(224, 192, 136, 0) 45%),
+    radial-gradient(130% 130% at 85% 90%, rgba(139, 0, 0, 0.55) 0%, rgba(139, 0, 0, 0) 55%),
+    linear-gradient(135deg, #a11a1a 0%, #7a0000 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.ph::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+  background-size: 28px 28px;
+  pointer-events: none;
+}
+
+.ph-inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+  padding: 12px;
+}
+
+.ph-inner .ph-icon {
+  font-size: 34px;
+  line-height: 1;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.3));
+}
+
+.ph-inner .ph-text {
+  font-size: 15px;
+  letter-spacing: 3px;
+  font-weight: 600;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.ph.ph-light {
+  background:
+    radial-gradient(120% 120% at 15% 15%, rgba(224, 192, 136, 0.35) 0%, rgba(224, 192, 136, 0) 45%),
+    linear-gradient(135deg, #b5533f 0%, #8b0000 100%);
+}
+
+/* 通用卡片 */
+.panel-card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+/* 标签徽记 */
+.tag-badge {
+  display: inline-block;
+  font-size: 12px;
+  color: var(--brand-red);
+  background: #f6ecec;
+  border: 1px solid #edd8d8;
+  padding: 2px 10px;
+  border-radius: 12px;
+  line-height: 1.6;
 }

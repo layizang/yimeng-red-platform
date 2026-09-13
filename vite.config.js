@@ -7,6 +7,13 @@ export default defineConfig(({ command }) => ({
   plugins: [vue()],
   server: {
     port: 5173,
-    open: true
+    open: true,
+    proxy: {
+      // 后端接口代理到 Spring Boot
+      '/api': {
+        target: 'http://localhost:8080',
+        changeOrigin: true
+      }
+    }
   }
 }))

@@ -1,7 +1,7 @@
 <template>
   <div class="page-container">
-    <h1 class="page-title">人物志</h1>
-    <p class="page-subtitle">指挥员与支前群众群像，点击卡片查看关系</p>
+    <h1 class="page-title">英烈人物</h1>
+    <p class="page-subtitle">指挥员与支前群众群像，点击卡片查看生平与人物关系</p>
 
     <el-row :gutter="16">
       <el-col v-for="p in persons" :key="p.id" :xs="12" :sm="6">
@@ -30,25 +30,72 @@
       </template>
     </el-dialog>
 
-    <!-- 关系图谱占位 -->
+    <!-- 关系图谱 -->
     <el-card shadow="never" class="graph-card">
-      <div class="graph-head">人物关系图谱（正式版使用 ECharts 关系图）</div>
-      <div class="graph-body">
-        <div v-for="r in relations" :key="r.source + '-' + r.target" class="graph-link">
-          <span class="g-node">{{ personName(r.source) }}</span>
-          <span class="g-edge">{{ r.type }}</span>
-          <span class="g-node">{{ personName(r.target) }}</span>
-        </div>
-      </div>
+      <div class="graph-head">人物关系图谱（点击节点查看详情）</div>
+      <div ref="graphRef" class="graph-body"></div>
     </el-card>
   </div>
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
-import { persons, relations } from '../data/mock'
+import * as echarts from 'echarts'
+import { computed, nextTick, onMounted, ref } from 'vue'
+import { getPersons, getRelations } from '../api/personage'
 
+const persons = ref([])
+const relations = ref([])
 const activePerson = ref(null)
+const graphRef = ref(null)
+let chart = null
+
+onMounted(async () => {
+  const [p, r] = await Promise.all([getPersons(), getRelations()])
+  persons.value = p || []
+  relations.value = r || []
+  await nextTick()
+  renderGraph()
+})
+
+function renderGraph() {
+  if (!graphRef.value || !persons.value.length) return
+  if (!chart) {
+    chart = echarts.init(graphRef.value)
+    chart.on('click', (params) => {
+      if (params.dataType === 'node') {
+        activePerson.value = persons.value.find((p) => p.id === params.data.id) || null
+      }
+    })
+  }
+  chart.setOption({
+    tooltip: {
+      formatter: (p) => (p.dataType === 'node' ? p.name : `${p.data.sourceName} —${p.data.type}→ ${p.data.targetName}`)
+    },
+    series: [{
+      type: 'graph',
+      layout: 'force',
+      roam: true,
+      label: { show: true, position: 'bottom', fontSize: 13, color: '#444' },
+      edgeSymbol: ['none', 'arrow'],
+      edgeSymbolSize: 8,
+      lineStyle: { color: '#bbb', width: 1.5 },
+      data: persons.value.map((p) => ({
+        id: p.id,
+        name: p.name,
+        symbolSize: 58,
+        itemStyle: { color: p.faction === 'red' ? '#c0392b' : '#2b5ba8' },
+        label: { show: true }
+      })),
+      links: relations.value.map((r) => ({
+        source: r.source,
+        target: r.target,
+        label: { show: true, formatter: r.type, fontSize: 11, color: '#888' },
+        lineStyle: { color: r.type === '敌对' ? '#999' : '#d4a017' }
+      })),
+      force: { repulsion: 260, edgeLength: [80, 140] }
+    }]
+  })
+}
 const dialogVisible = computed({
   get: () => activePerson.value !== null,
   set: (v) => {
@@ -57,12 +104,12 @@ const dialogVisible = computed({
 })
 
 function personName(id) {
-  return persons.find((p) => p.id === id)?.name || id
+  return persons.value.find((p) => p.id === id)?.name || id
 }
 
 const activeRelations = computed(() => {
   if (!activePerson.value) return []
-  return relations.filter((r) => r.source === activePerson.value.id)
+  return relations.value.filter((r) => r.source === activePerson.value.id)
 })
 </script>
 
@@ -151,27 +198,7 @@ const activeRelations = computed(() => {
 }
 
 .graph-body {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-}
-
-.graph-link {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.g-node {
-  background: var(--brand-red);
-  color: #fff;
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-size: 13px;
-}
-
-.g-edge {
-  color: #999;
-  font-size: 12px;
+  width: 100%;
+  height: 380px;
 }
 </style>

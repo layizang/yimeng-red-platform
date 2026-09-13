@@ -8,11 +8,13 @@ const routes = [
     redirect: '/home',
     children: [
       { path: 'home', name: 'home', component: () => import('../views/Home.vue'), meta: { title: '首页' } },
-      { path: 'sandbox', name: 'sandbox', component: () => import('../views/Sandbox.vue'), meta: { title: '战役沙盘' } },
-      { path: 'personage', name: 'personage', component: () => import('../views/Personage.vue'), meta: { title: '人物志' } },
-      { path: 'ai', name: 'ai', component: () => import('../views/AiAssistant.vue'), meta: { title: 'AI 讲解员' } },
-      { path: 'panorama', name: 'panorama', component: () => import('../views/Panorama.vue'), meta: { title: '全景云游' } },
-      { path: 'course', name: 'course', component: () => import('../views/Course.vue'), meta: { title: '红色课堂' } }
+      { path: 'overview', name: 'overview', component: () => import('../views/Overview.vue'), meta: { title: '战役纵览' } },
+      { path: 'sandbox', name: 'sandbox', component: () => import('../views/Sandbox.vue'), meta: { title: '战役进程' } },
+      { path: 'personage', name: 'personage', component: () => import('../views/Personage.vue'), meta: { title: '英烈人物' } },
+      { path: 'relics', name: 'relics', component: () => import('../views/Relics.vue'), meta: { title: '遗址文物' } },
+      { path: 'memory', name: 'memory', component: () => import('../views/Memory.vue'), meta: { title: '红色记忆' } },
+      { path: 'search', name: 'search', component: () => import('../views/Search.vue'), meta: { title: '站内检索' } },
+      { path: 'ai', name: 'ai', component: () => import('../views/AiAssistant.vue'), meta: { title: 'AI 讲解员' } }
     ]
   },
   { path: '/login', name: 'login', component: () => import('../views/Login.vue'), meta: { title: '登录' } },

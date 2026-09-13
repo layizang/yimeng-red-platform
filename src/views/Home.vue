@@ -1,220 +1,386 @@
 <template>
   <div class="home">
-    <!-- Hero -->
-    <section class="hero">
-      <div class="hero-bg"></div>
-      <div class="hero-content">
-        <p class="hero-eyebrow">水乳交融 · 生死与共</p>
-        <h1 class="hero-title">孟良崮战役<br />红色信息平台</h1>
-        <p class="hero-desc">
-          以动态沙盘推演、AI 讲解员与全景云游，沉浸式还原一场扭转华东战局的关键战役，
-          讲透沂蒙精神。
-        </p>
-        <div class="hero-actions">
-          <el-button type="primary" size="large" round @click="router.push('/sandbox')">
-            进入战役沙盘
-          </el-button>
-          <el-button size="large" round plain @click="router.push('/ai')">
-            问问 AI 讲解员
-          </el-button>
+    <!-- 轮播主视觉 -->
+    <el-carousel height="420px" :interval="5000" arrow="hover" class="banner">
+      <el-carousel-item v-for="(b, i) in banners" :key="i">
+        <div class="banner-slide" @click="router.push(b.path)">
+          <div class="banner-bg ph">
+            <div class="ph-inner">
+              <span class="ph-icon">{{ b.icon }}</span>
+              <span class="ph-text">{{ b.placeholder }}</span>
+            </div>
+          </div>
+          <div class="banner-mask"></div>
+          <div class="banner-content">
+            <p class="banner-eyebrow">水乳交融 · 生死与共</p>
+            <h2 class="banner-title">{{ b.title }}</h2>
+            <p class="banner-desc">{{ b.desc }}</p>
+            <el-button type="primary" round size="large" @click.stop="router.push(b.path)">
+              {{ b.action }} →
+            </el-button>
+          </div>
+        </div>
+      </el-carousel-item>
+    </el-carousel>
+
+    <!-- 数据卡 -->
+    <section class="facts">
+      <div class="page-container facts-inner">
+        <div v-for="f in battleFacts" :key="f.label" class="fact-card">
+          <div class="fact-value">{{ f.value }}</div>
+          <div class="fact-label">{{ f.label }}</div>
+          <div class="fact-unit">{{ f.unit }}</div>
         </div>
       </div>
     </section>
 
-    <!-- 模块入口 -->
+    <!-- 战役概述 -->
     <section class="page-container">
-      <h2 class="section-title">平台模块</h2>
-      <div class="module-grid">
+      <h2 class="section-title">战役概述</h2>
+      <div class="intro">
+        <div class="intro-media ph">
+          <div class="ph-inner">
+            <span class="ph-icon">🏔️</span>
+            <span class="ph-text">孟良崮主峰 · 示意图</span>
+          </div>
+        </div>
+        <div class="intro-body">
+          <h3 class="intro-title">{{ overviewIntro.title }}</h3>
+          <div class="intro-subtitle">{{ overviewIntro.subtitle }}</div>
+          <p v-for="(p, i) in overviewIntro.paragraphs" :key="i" class="intro-p">{{ p }}</p>
+          <div class="intro-actions">
+            <el-button type="primary" round @click="router.push('/overview')">了解战役全貌</el-button>
+            <el-button round plain @click="router.push('/sandbox')">进入战役沙盘</el-button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 分栏目导览 -->
+    <section class="page-container">
+      <h2 class="section-title">专题导览</h2>
+      <div class="section-grid">
         <div
-          v-for="m in modules"
+          v-for="m in sections"
           :key="m.path"
-          class="module-card"
+          class="section-card"
           @click="router.push(m.path)"
         >
-          <el-icon :size="34" class="module-icon"><component :is="m.icon" /></el-icon>
-          <div class="module-name">{{ m.name }}</div>
-          <div class="module-desc">{{ m.desc }}</div>
+          <div class="sc-head">
+            <div class="sc-icon ph">
+              <div class="ph-inner"><span class="ph-icon">{{ m.icon }}</span></div>
+            </div>
+            <div class="sc-title">
+              <div class="sc-name">{{ m.name }}</div>
+              <div class="sc-desc">{{ m.desc }}</div>
+            </div>
+          </div>
+          <ul class="sc-list">
+            <li v-for="it in m.items" :key="it">{{ it }}</li>
+          </ul>
+          <div class="sc-more">查看详情 →</div>
         </div>
       </div>
-    </section>
-
-    <!-- 战役速览 -->
-    <section class="page-container">
-      <h2 class="section-title">战役速览</h2>
-      <el-row :gutter="16">
-        <el-col v-for="s in stages" :key="s.id" :xs="12" :sm="6">
-          <div class="stage-card">
-            <div class="stage-order">{{ s.order }}</div>
-            <div class="stage-name">{{ s.name }}</div>
-            <div class="stage-summary">{{ s.summary }}</div>
-          </div>
-        </el-col>
-      </el-row>
     </section>
   </div>
 </template>
 
 <script setup>
+import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { stages } from '../data/mock'
+import { getStages } from '../api/battle'
+import { battleFacts, overviewIntro } from '../data/content'
 
 const router = useRouter()
+const stages = ref([])
 
-const modules = [
-  { name: '战役沙盘', desc: '地图 + 时间轴联动态势推演', icon: 'MapLocation', path: '/sandbox' },
-  { name: '人物志', desc: '指挥员与支前群众群像', icon: 'Avatar', path: '/personage' },
-  { name: 'AI 讲解员', desc: '基于党史知识库的问答', icon: 'ChatDotRound', path: '/ai' },
-  { name: '全景云游', desc: '纪念馆与遗址 720° 漫游', icon: 'View', path: '/panorama' },
-  { name: '红色课堂', desc: '学测评闭环，领取证书', icon: 'Reading', path: '/course' }
+onMounted(async () => {
+  stages.value = (await getStages()) || []
+})
+
+const banners = [
+  {
+    title: '孟良崮战役',
+    desc: '解放战争时期华东战场的关键一战，全歼国民党五大主力之一的整编第七十四师。',
+    icon: '🏔️', placeholder: '孟良崮主峰 · 示意图', action: '走进战役', path: '/overview'
+  },
+  {
+    title: '动态沙盘推演',
+    desc: '地图与时间轴联动，分阶段还原战役合围、分割、总攻的完整态势。',
+    icon: '🗺️', placeholder: '战役态势图 · 示意图', action: '启动推演', path: '/sandbox'
+  },
+  {
+    title: '沂蒙精神',
+    desc: '水乳交融、生死与共——数十万支前群众，铸就人民战争的磅礴伟力。',
+    icon: '❤️', placeholder: '支前群众 · 示意图', action: '感悟精神', path: '/memory'
+  }
+]
+
+const sections = [
+  {
+    name: '战役纵览', desc: '背景、部署、经过与意义', icon: '📖', path: '/overview',
+    items: ['战役背景', '双方部署', '战役经过', '历史意义']
+  },
+  {
+    name: '战役进程', desc: '时间轴 + 动态沙盘推演', icon: '🗺️', path: '/sandbox',
+    items: ['诱敌深入', '穿插分割', '围歼 74 师', '战后意义']
+  },
+  {
+    name: '英烈人物', desc: '指挥员与支前群众群像', icon: '🕊️', path: '/personage',
+    items: ['陈毅', '粟裕', '张灵甫', '沂蒙六姐妹']
+  },
+  {
+    name: '遗址文物', desc: '纪念馆、遗址与馆藏', icon: '🏛️', path: '/relics',
+    items: ['孟良崮战役纪念馆', '大崮顶战场遗址', '战役纪念碑', '馆藏文物']
+  },
+  {
+    name: '红色记忆', desc: '口述史、回忆录与文献', icon: '📜', path: '/memory',
+    items: ['粟裕回忆录', '沂蒙六姐妹口述', '华东解放战争纪实', '沂蒙精神文献']
+  }
 ]
 </script>
 
 <style scoped>
-.hero {
-  position: relative;
-  color: #fff;
-  overflow: hidden;
+/* 轮播 */
+.banner :deep(.el-carousel__item) {
+  border-radius: 0;
 }
 
-.hero-bg {
+.banner-slide {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+
+.banner-bg {
   position: absolute;
   inset: 0;
-  background:
-    linear-gradient(135deg, rgba(122, 0, 0, 0.92), rgba(160, 30, 20, 0.85)),
-    url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400"><rect width="800" height="400" fill="%237a0000"/></svg>') center/cover;
 }
 
-.hero-content {
-  position: relative;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 80px 20px;
+.banner-mask {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(20, 0, 0, 0.78) 0%, rgba(20, 0, 0, 0.45) 45%, rgba(20, 0, 0, 0.15) 100%);
 }
 
-.hero-eyebrow {
-  letter-spacing: 6px;
+.banner-content {
+  position: absolute;
+  left: 8%;
+  top: 50%;
+  transform: translateY(-50%);
+  max-width: 560px;
+  color: #fff;
+}
+
+.banner-eyebrow {
+  letter-spacing: 8px;
   color: var(--brand-gold);
   font-weight: 600;
-  margin: 0 0 12px;
+  margin: 0 0 14px;
 }
 
-.hero-title {
-  font-size: 44px;
-  line-height: 1.25;
+.banner-title {
+  font-size: 40px;
+  letter-spacing: 3px;
   margin: 0 0 16px;
-  letter-spacing: 2px;
 }
 
-.hero-desc {
-  max-width: 560px;
+.banner-desc {
   font-size: 16px;
   line-height: 1.8;
   color: #f0dcdc;
-  margin: 0 0 28px;
+  margin: 0 0 24px;
 }
 
-.hero-actions :deep(.el-button--primary) {
+.banner-content :deep(.el-button--primary) {
   --el-button-bg-color: var(--brand-gold);
   --el-button-border-color: var(--brand-gold);
   --el-button-text-color: #5a0000;
-  --el-button-hover-bg-color: #d8b36a;
-  --el-button-hover-border-color: #d8b36a;
+  --el-button-hover-bg-color: #e0c088;
+  --el-button-hover-border-color: #e0c088;
 }
 
-.hero-actions :deep(.el-button.is-plain) {
-  --el-button-text-color: #fff;
-  --el-button-border-color: #fff;
-  --el-button-bg-color: transparent;
-  --el-button-hover-bg-color: rgba(255, 255, 255, 0.15);
+/* 数据卡 */
+.facts {
+  background: #fff;
+  border-bottom: 1px solid var(--line);
 }
 
-.section-title {
-  font-size: 22px;
-  font-weight: 700;
-  color: var(--brand-red);
-  margin: 8px 0 20px;
-}
-
-.module-grid {
+.facts-inner {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
+  gap: 20px;
+  padding: 32px 20px;
 }
 
-.module-card {
-  background: #fff;
-  border-radius: 10px;
-  padding: 24px 18px;
+.fact-card {
   text-align: center;
+  padding: 18px 12px;
+  border-right: 1px solid #f0f0f0;
+}
+
+.fact-card:last-child {
+  border-right: none;
+}
+
+.fact-value {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--brand-red);
+  letter-spacing: 1px;
+}
+
+.fact-label {
+  font-size: 15px;
+  color: #555;
+  font-weight: 600;
+  margin: 8px 0 4px;
+}
+
+.fact-unit {
+  font-size: 12px;
+  color: #aaa;
+}
+
+/* 概述 */
+.intro {
+  display: grid;
+  grid-template-columns: 1fr 1.3fr;
+  gap: 28px;
+  align-items: stretch;
+}
+
+.intro-media {
+  min-height: 320px;
+  border-radius: 10px;
+}
+
+.intro-title {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--brand-red);
+  margin: 0 0 4px;
+}
+
+.intro-subtitle {
+  font-size: 14px;
+  color: var(--brand-gold);
+  letter-spacing: 2px;
+  margin: 0 0 16px;
+}
+
+.intro-p {
+  font-size: 14px;
+  line-height: 1.9;
+  color: #555;
+  margin: 0 0 12px;
+}
+
+.intro-actions {
+  margin-top: 18px;
+  display: flex;
+  gap: 12px;
+}
+
+/* 专题导览 */
+.section-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.section-card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 20px;
   cursor: pointer;
   transition: all 0.2s;
-  border: 1px solid #eee;
 }
 
-.module-card:hover {
+.section-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 8px 20px rgba(160, 30, 20, 0.15);
+  box-shadow: 0 10px 24px rgba(139, 0, 0, 0.12);
   border-color: #e0b0a8;
 }
 
-.module-icon {
-  color: var(--brand-red);
-  margin-bottom: 10px;
+.sc-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 14px;
 }
 
-.module-name {
-  font-size: 17px;
-  font-weight: 600;
+.sc-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.sc-icon .ph-icon {
+  font-size: 24px;
+}
+
+.sc-name {
+  font-size: 18px;
+  font-weight: 700;
   color: #333;
-  margin-bottom: 6px;
 }
 
-.module-desc {
+.sc-desc {
   font-size: 13px;
   color: #999;
-  line-height: 1.5;
+  margin-top: 3px;
 }
 
-.stage-card {
-  background: #fff;
-  border: 1px solid #eee;
-  border-top: 3px solid var(--brand-red);
-  border-radius: 8px;
-  padding: 18px;
-  height: 100%;
+.sc-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 16px;
 }
 
-.stage-order {
-  width: 28px;
-  height: 28px;
-  line-height: 28px;
-  text-align: center;
-  background: var(--brand-red);
-  color: #fff;
-  border-radius: 50%;
-  font-weight: 700;
-  margin-bottom: 10px;
-}
-
-.stage-name {
-  font-size: 16px;
-  font-weight: 700;
-  color: #333;
-  margin-bottom: 8px;
-}
-
-.stage-summary {
+.sc-list li {
   font-size: 13px;
-  color: #888;
-  line-height: 1.6;
+  color: #666;
+  padding-left: 14px;
+  position: relative;
 }
 
-@media (max-width: 768px) {
-  .module-grid {
+.sc-list li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 7px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--brand-gold);
+}
+
+.sc-more {
+  margin-top: 14px;
+  font-size: 13px;
+  color: var(--brand-red);
+  font-weight: 600;
+}
+
+@media (max-width: 860px) {
+  .facts-inner {
     grid-template-columns: repeat(2, 1fr);
   }
-  .hero-title {
-    font-size: 32px;
+  .intro {
+    grid-template-columns: 1fr;
+  }
+  .section-grid {
+    grid-template-columns: 1fr;
+  }
+  .banner-title {
+    font-size: 28px;
   }
 }
 </style>
